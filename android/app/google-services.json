@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "924312550788",
+    "firebase_url": "https://ping-pulse-default-rtdb.firebaseio.com",
+    "project_id": "ping-pulse",
+    "storage_bucket": "ping-pulse.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:924312550788:android:a99b0a4ebfba142fe0f1d1",
+        "android_client_info": {
+          "package_name": "com.example.url_manager"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDiAzZx-oIPyP79Gqhh6qq9NL7cl7n6OBg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
