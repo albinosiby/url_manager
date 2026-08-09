@@ -77,34 +77,42 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       backgroundColor: AppTheme.background,
       body: Stack(
         children: [
-          // Ambient Neon Backdrop Glows
+          // Ambient Cyber Orbs
           Positioned(
-            top: -60.h,
+            top: -80.h,
             left: -60.w,
             child: Container(
-              width: 260.w,
-              height: 260.w,
+              width: 280.w,
+              height: 280.w,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: AppTheme.neonCyan.withOpacity(0.06),
+                color: AppTheme.neonCyan.withOpacity(0.08),
               ),
-            ),
+            ).animate(onPlay: (c) => c.repeat(reverse: true)).scale(
+                  begin: const Offset(1, 1),
+                  end: const Offset(1.15, 1.15),
+                  duration: 4.seconds,
+                ),
           ),
           Positioned(
-            bottom: 120.h,
-            right: -60.w,
+            bottom: 100.h,
+            right: -80.w,
             child: Container(
-              width: 260.w,
-              height: 260.w,
+              width: 300.w,
+              height: 300.w,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: AppTheme.neonPurple.withOpacity(0.06),
+                color: AppTheme.neonPurple.withOpacity(0.08),
               ),
-            ),
+            ).animate(onPlay: (c) => c.repeat(reverse: true)).scale(
+                  begin: const Offset(1, 1),
+                  end: const Offset(1.2, 1.2),
+                  duration: 5.seconds,
+                ),
           ),
           Column(
             children: [
-              _buildTopHeader(),
+              _buildTopHeader(urlsAsync.value?.length ?? 0),
               _buildSectionTabBar(),
               if (_selectedTab == 0) _buildCategoryChips(),
               SizedBox(height: 6.h),
@@ -112,7 +120,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 child: urlsAsync.when(
                   data: (urls) {
                     if (_selectedTab == 1) {
-                      // Password Vault Tab (items with credentials)
+                      // Password Vault Tab
                       final passUrls = urls.where((u) => u.hasCredentials).where((u) {
                         return u.name.toLowerCase().contains(_searchQuery.toLowerCase()) ||
                             u.url.toLowerCase().contains(_searchQuery.toLowerCase()) ||
@@ -170,7 +178,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           crossAxisCount: 2,
                           crossAxisSpacing: 12.w,
                           mainAxisSpacing: 12.h,
-                          childAspectRatio: 0.95,
+                          childAspectRatio: 0.92,
                         ),
                         itemCount: filteredUrls.length,
                         itemBuilder: (context, index) {
@@ -253,29 +261,31 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           width: 56.w,
           height: 56.w,
           decoration: BoxDecoration(
-            color: AppTheme.neonCyan,
-            borderRadius: BorderRadius.circular(16),
+            gradient: const LinearGradient(
+              colors: [Color(0xFF00F2FF), Color(0xFF8B5CF6)],
+            ),
+            borderRadius: BorderRadius.circular(18),
             boxShadow: [
               BoxShadow(
-                color: AppTheme.neonCyan.withOpacity(0.4),
+                color: AppTheme.neonCyan.withOpacity(0.45),
                 blurRadius: 20,
                 offset: const Offset(0, 4),
               ),
             ],
           ),
           child: Icon(
-            _selectedTab == 0 ? Icons.add : Icons.add_moderator,
+            _selectedTab == 0 ? Icons.add_rounded : Icons.add_moderator_rounded,
             color: Colors.black,
-            size: 28,
+            size: 28.sp,
           ),
         ),
-      ).animate().scale(delay: 600.ms, curve: Curves.elasticOut),
+      ).animate().scale(delay: 400.ms, curve: Curves.elasticOut),
     );
   }
 
   Widget _buildSectionTabBar() {
     return Container(
-      margin: EdgeInsets.symmetric(horizontal: 20.w, vertical: 8.h),
+      margin: EdgeInsets.symmetric(horizontal: 20.w, vertical: 6.h),
       padding: EdgeInsets.all(4.w),
       decoration: BoxDecoration(
         color: Colors.white.withOpacity(0.04),
@@ -286,15 +296,27 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         children: [
           Expanded(
             child: GestureDetector(
-              onTap: () => setState(() => _selectedTab = 0),
-              child: Container(
+              onTap: () {
+                HapticFeedback.selectionClick();
+                setState(() => _selectedTab = 0);
+              },
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 250),
                 padding: EdgeInsets.symmetric(vertical: 8.h),
                 decoration: BoxDecoration(
-                  color: _selectedTab == 0 ? AppTheme.neonCyan.withOpacity(0.15) : Colors.transparent,
+                  color: _selectedTab == 0 ? AppTheme.neonCyan.withOpacity(0.18) : Colors.transparent,
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(
-                    color: _selectedTab == 0 ? AppTheme.neonCyan.withOpacity(0.5) : Colors.transparent,
+                    color: _selectedTab == 0 ? AppTheme.neonCyan.withOpacity(0.6) : Colors.transparent,
                   ),
+                  boxShadow: _selectedTab == 0
+                      ? [
+                          BoxShadow(
+                            color: AppTheme.neonCyan.withOpacity(0.15),
+                            blurRadius: 10,
+                          ),
+                        ]
+                      : null,
                 ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -320,23 +342,35 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           ),
           Expanded(
             child: GestureDetector(
-              onTap: () => setState(() => _selectedTab = 1),
-              child: Container(
+              onTap: () {
+                HapticFeedback.selectionClick();
+                setState(() => _selectedTab = 1);
+              },
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 250),
                 padding: EdgeInsets.symmetric(vertical: 8.h),
                 decoration: BoxDecoration(
-                  color: _selectedTab == 1 ? AppTheme.neonCyan.withOpacity(0.15) : Colors.transparent,
+                  color: _selectedTab == 1 ? AppTheme.neonPurple.withOpacity(0.18) : Colors.transparent,
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(
-                    color: _selectedTab == 1 ? AppTheme.neonCyan.withOpacity(0.5) : Colors.transparent,
+                    color: _selectedTab == 1 ? AppTheme.neonPurple.withOpacity(0.6) : Colors.transparent,
                   ),
+                  boxShadow: _selectedTab == 1
+                      ? [
+                          BoxShadow(
+                            color: AppTheme.neonPurple.withOpacity(0.15),
+                            blurRadius: 10,
+                          ),
+                        ]
+                      : null,
                 ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Icon(
-                      Icons.shield_outlined,
+                      Icons.shield_rounded,
                       size: 16.sp,
-                      color: _selectedTab == 1 ? AppTheme.neonCyan : Colors.white54,
+                      color: _selectedTab == 1 ? AppTheme.neonPurple : Colors.white54,
                     ),
                     SizedBox(width: 6.w),
                     Text(
@@ -344,7 +378,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       style: TextStyle(
                         fontSize: 13.sp,
                         fontWeight: FontWeight.bold,
-                        color: _selectedTab == 1 ? AppTheme.neonCyan : Colors.white54,
+                        color: _selectedTab == 1 ? AppTheme.neonPurple : Colors.white54,
                       ),
                     ),
                   ],
@@ -387,7 +421,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         }
       },
       child: isGrid ? _GridUrlCard(url: url) : _UrlCard(url: url),
-    ).animate(delay: (index * 40).ms).fadeIn(duration: 350.ms).scale(
+    ).animate(delay: (index * 30).ms).fadeIn(duration: 300.ms).scale(
           begin: const Offset(0.96, 0.96),
           curve: Curves.easeOut,
         );
@@ -423,7 +457,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         }
       },
       child: _PasswordCard(url: url),
-    ).animate(delay: (index * 40).ms).fadeIn(duration: 350.ms).scale(
+    ).animate(delay: (index * 30).ms).fadeIn(duration: 300.ms).scale(
           begin: const Offset(0.96, 0.96),
           curve: Curves.easeOut,
         );
@@ -449,7 +483,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   decoration: BoxDecoration(
                     color: AppTheme.neonCyan.withOpacity(0.1),
                     shape: BoxShape.circle,
-                    border: Border.all(color: AppTheme.neonCyan.withOpacity(0.3)),
+                    border: Border.all(color: AppTheme.neonCyan.withOpacity(0.4)),
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppTheme.neonCyan.withOpacity(0.2),
+                        blurRadius: 30,
+                      ),
+                    ],
                   ),
                   child: Icon(
                     Icons.lock_outline_rounded,
@@ -468,7 +508,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 ),
                 SizedBox(height: 8.h),
                 Text(
-                  'Biometric protection enabled',
+                  'Biometric authentication required',
                   style: TextStyle(color: Colors.white54, fontSize: 14.sp),
                 ),
                 SizedBox(height: 32.h),
@@ -483,8 +523,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       borderRadius: BorderRadius.circular(30),
                       boxShadow: [
                         BoxShadow(
-                          color: AppTheme.neonCyan.withOpacity(0.3),
-                          blurRadius: 15,
+                          color: AppTheme.neonCyan.withOpacity(0.35),
+                          blurRadius: 18,
                           offset: const Offset(0, 5),
                         ),
                       ],
@@ -492,7 +532,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Icon(Icons.fingerprint, color: Colors.black),
+                        const Icon(Icons.fingerprint_rounded, color: Colors.black),
                         SizedBox(width: 8.w),
                         Text(
                           'Unlock Vault',
@@ -514,9 +554,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 
-  Widget _buildTopHeader() {
+  Widget _buildTopHeader(int totalCount) {
     return Container(
-      margin: EdgeInsets.only(top: 50.h, left: 20.w, right: 20.w, bottom: 6.h),
+      margin: EdgeInsets.only(top: 48.h, left: 20.w, right: 20.w, bottom: 6.h),
       child: Column(
         children: [
           Row(
@@ -524,21 +564,38 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             children: [
               Row(
                 children: [
-                  Image.asset(
-                    'assets/logo.png',
-                    height: 32.h,
-                    errorBuilder: (context, error, stackTrace) =>
-                        Icon(Icons.link, color: AppTheme.neonCyan, size: 24.sp),
+                  Container(
+                    padding: EdgeInsets.all(6.w),
+                    decoration: BoxDecoration(
+                      color: AppTheme.neonCyan.withOpacity(0.12),
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: AppTheme.neonCyan.withOpacity(0.3)),
+                    ),
+                    child: Icon(Icons.shield_outlined, color: AppTheme.neonCyan, size: 20.sp),
                   ),
                   SizedBox(width: 10.w),
-                  Text(
-                    'URL VAULT',
-                    style: GoogleFonts.outfit(
-                      fontSize: 18.sp,
-                      fontWeight: FontWeight.w900,
-                      color: Colors.white,
-                      letterSpacing: 2,
-                    ),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'URL VAULT',
+                        style: GoogleFonts.outfit(
+                          fontSize: 18.sp,
+                          fontWeight: FontWeight.w900,
+                          color: Colors.white,
+                          letterSpacing: 1.5,
+                        ),
+                      ),
+                      Text(
+                        '$totalCount CONNECTIONS ENCRYPTED',
+                        style: TextStyle(
+                          fontSize: 9.sp,
+                          fontWeight: FontWeight.bold,
+                          color: AppTheme.neonCyan,
+                          letterSpacing: 1,
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
@@ -551,12 +608,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         color: Colors.white70,
                         size: 20.sp,
                       ),
-                      onPressed: () => setState(() => _isGridView = !_isGridView),
+                      onPressed: () {
+                        HapticFeedback.lightImpact();
+                        setState(() => _isGridView = !_isGridView);
+                      },
                       tooltip: _isGridView ? 'Switch to List View' : 'Switch to Grid View',
                     ),
                   IconButton(
                     icon: Icon(
-                      _isVaultLocked ? Icons.lock : Icons.lock_open,
+                      _isVaultLocked ? Icons.lock_rounded : Icons.lock_open_rounded,
                       color: AppTheme.neonCyan,
                       size: 20.sp,
                     ),
@@ -571,18 +631,18 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           Container(
             padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 4.h),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.06),
+              color: Colors.white.withOpacity(0.05),
               borderRadius: BorderRadius.circular(24),
               border: Border.all(
                 color: _searchQuery.isNotEmpty
-                    ? AppTheme.neonCyan.withOpacity(0.5)
-                    : Colors.white.withOpacity(0.1),
+                    ? AppTheme.neonCyan.withOpacity(0.6)
+                    : Colors.white.withOpacity(0.08),
                 width: 1.2,
               ),
               boxShadow: [
                 BoxShadow(
                   color: _searchQuery.isNotEmpty
-                      ? AppTheme.neonCyan.withOpacity(0.15)
+                      ? AppTheme.neonCyan.withOpacity(0.18)
                       : Colors.black.withOpacity(0.3),
                   blurRadius: 16,
                   offset: const Offset(0, 4),
@@ -596,7 +656,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   color: _searchQuery.isNotEmpty
                       ? AppTheme.neonCyan
                       : Colors.white38,
-                  size: 20.sp,
+                  size: 18.sp,
                 ),
                 SizedBox(width: 10.w),
                 Expanded(
@@ -605,14 +665,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     onChanged: (value) => setState(() => _searchQuery = value),
                     style: TextStyle(
                       color: Colors.white,
-                      fontSize: 14.sp,
+                      fontSize: 13.sp,
                       fontWeight: FontWeight.w500,
                     ),
                     decoration: InputDecoration(
                       hintText: _selectedTab == 0 ? 'Search links, domain, notes...' : 'Search logins, username, website...',
                       hintStyle: TextStyle(
                         color: Colors.white30,
-                        fontSize: 13.sp,
+                        fontSize: 12.sp,
                       ),
                       isDense: true,
                       contentPadding: EdgeInsets.symmetric(vertical: 10.h),
@@ -652,7 +712,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   Widget _buildCategoryChips() {
     return SizedBox(
-      height: 38.h,
+      height: 36.h,
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
         padding: EdgeInsets.symmetric(horizontal: 20.w),
@@ -661,25 +721,23 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           final cat = _categories[index];
           final isSelected = cat == _selectedCategory;
           final catColor = AppTheme.getCategoryColor(cat);
+          final catIcon = AppTheme.getCategoryIcon(cat);
 
           return Padding(
             padding: EdgeInsets.only(right: 8.w),
             child: ChoiceChip(
-              avatar: cat == 'Favorites'
-                  ? Icon(
-                      Icons.star,
-                      size: 14.sp,
-                      color: isSelected
-                          ? Colors.amber
-                          : Colors.amber.withOpacity(0.6),
-                    )
-                  : null,
+              avatar: Icon(
+                catIcon,
+                size: 14.sp,
+                color: isSelected ? catColor : Colors.white54,
+              ),
               label: Text(cat),
               selected: isSelected,
-              selectedColor: catColor.withOpacity(0.2),
+              selectedColor: catColor.withOpacity(0.22),
               backgroundColor: Colors.white.withOpacity(0.04),
               side: BorderSide(
                 color: isSelected ? catColor : Colors.white10,
+                width: isSelected ? 1.4 : 1,
               ),
               labelStyle: TextStyle(
                 color: isSelected ? catColor : Colors.white60,
@@ -688,6 +746,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               ),
               onSelected: (selected) {
                 if (selected) {
+                  HapticFeedback.selectionClick();
                   setState(() => _selectedCategory = cat);
                 }
               },
@@ -870,7 +929,13 @@ class _PasswordCardState extends ConsumerState<_PasswordCard> {
       child: GlassCard(
         padding: EdgeInsets.all(16.w),
         borderRadius: 20,
-        opacity: 0.1,
+        opacity: 0.12,
+        borderGradient: LinearGradient(
+          colors: [
+            AppTheme.neonPurple.withOpacity(0.35),
+            Colors.white.withOpacity(0.04),
+          ],
+        ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -880,12 +945,18 @@ class _PasswordCardState extends ConsumerState<_PasswordCard> {
                 Row(
                   children: [
                     Container(
-                      width: 36.w,
-                      height: 36.w,
+                      width: 38.w,
+                      height: 38.w,
                       decoration: BoxDecoration(
                         color: Colors.black,
                         borderRadius: BorderRadius.circular(10),
-                        border: Border.all(color: Colors.white10),
+                        border: Border.all(color: AppTheme.neonPurple.withOpacity(0.4)),
+                        boxShadow: [
+                          BoxShadow(
+                            color: AppTheme.neonPurple.withOpacity(0.15),
+                            blurRadius: 8,
+                          ),
+                        ],
                       ),
                       child: ClipRRect(
                         borderRadius: BorderRadius.circular(10),
@@ -894,9 +965,9 @@ class _PasswordCardState extends ConsumerState<_PasswordCard> {
                                 faviconUrl,
                                 fit: BoxFit.cover,
                                 errorBuilder: (context, error, stackTrace) =>
-                                    Center(child: Text(initial, style: TextStyle(color: AppTheme.neonCyan, fontWeight: FontWeight.bold))),
+                                    Center(child: Text(initial, style: TextStyle(color: AppTheme.neonPurple, fontWeight: FontWeight.bold))),
                               )
-                            : Center(child: Text(initial, style: TextStyle(color: AppTheme.neonCyan, fontWeight: FontWeight.bold))),
+                            : Center(child: Text(initial, style: TextStyle(color: AppTheme.neonPurple, fontWeight: FontWeight.bold))),
                       ),
                     ),
                     SizedBox(width: 12.w),
@@ -947,14 +1018,14 @@ class _PasswordCardState extends ConsumerState<_PasswordCard> {
                 decoration: BoxDecoration(
                   color: Colors.black.withOpacity(0.3),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.white.withOpacity(0.05)),
+                  border: Border.all(color: Colors.white.withOpacity(0.06)),
                 ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Row(
                       children: [
-                        const Icon(Icons.person_outline, color: Colors.white38, size: 14),
+                        const Icon(Icons.person_outline_rounded, color: Colors.white38, size: 14),
                         SizedBox(width: 8.w),
                         Text(
                           url.username!,
@@ -968,7 +1039,7 @@ class _PasswordCardState extends ConsumerState<_PasswordCard> {
                         HapticFeedback.lightImpact();
                         ToastService.show(context, 'Username Copied');
                       },
-                      child: const Icon(Icons.copy, color: AppTheme.neonCyan, size: 14),
+                      child: const Icon(Icons.copy_rounded, color: AppTheme.neonCyan, size: 14),
                     ),
                   ],
                 ),
@@ -983,14 +1054,14 @@ class _PasswordCardState extends ConsumerState<_PasswordCard> {
                 decoration: BoxDecoration(
                   color: Colors.black.withOpacity(0.3),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.white.withOpacity(0.05)),
+                  border: Border.all(color: Colors.white.withOpacity(0.06)),
                 ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Row(
                       children: [
-                        const Icon(Icons.lock_outline, color: AppTheme.neonCyan, size: 14),
+                        const Icon(Icons.lock_outline_rounded, color: AppTheme.neonCyan, size: 14),
                         SizedBox(width: 8.w),
                         Text(
                           _obscurePassword ? '••••••••••••••••' : decryptedPass,
@@ -1007,7 +1078,7 @@ class _PasswordCardState extends ConsumerState<_PasswordCard> {
                         GestureDetector(
                           onTap: () => setState(() => _obscurePassword = !_obscurePassword),
                           child: Icon(
-                            _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                            _obscurePassword ? Icons.visibility_off_rounded : Icons.visibility_rounded,
                             color: Colors.white38,
                             size: 16,
                           ),
@@ -1019,7 +1090,7 @@ class _PasswordCardState extends ConsumerState<_PasswordCard> {
                             HapticFeedback.lightImpact();
                             ToastService.show(context, 'Password Copied');
                           },
-                          child: const Icon(Icons.key, color: AppTheme.neonCyan, size: 14),
+                          child: const Icon(Icons.key_rounded, color: AppTheme.neonCyan, size: 14),
                         ),
                       ],
                     ),
@@ -1069,7 +1140,7 @@ class _PasswordCardState extends ConsumerState<_PasswordCard> {
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          const Icon(Icons.open_in_new, color: AppTheme.neonCyan, size: 10),
+                          const Icon(Icons.open_in_new_rounded, color: AppTheme.neonCyan, size: 10),
                           SizedBox(width: 4.w),
                           Text(
                             'Open Site',
@@ -1123,8 +1194,14 @@ class _UrlCardState extends ConsumerState<_UrlCard> {
       padding: EdgeInsets.only(bottom: 10.h),
       child: GlassCard(
         padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 12.h),
-        borderRadius: 16,
+        borderRadius: 18,
         opacity: 0.08,
+        borderGradient: LinearGradient(
+          colors: [
+            catColor.withOpacity(0.35),
+            Colors.white.withOpacity(0.04),
+          ],
+        ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -1156,7 +1233,7 @@ class _UrlCardState extends ConsumerState<_UrlCard> {
                     decoration: BoxDecoration(
                       color: catColor.withOpacity(0.15),
                       borderRadius: BorderRadius.circular(6),
-                      border: Border.all(color: catColor.withOpacity(0.3), width: 0.8),
+                      border: Border.all(color: catColor.withOpacity(0.35), width: 0.8),
                     ),
                     child: Text(
                       url.category,
@@ -1195,7 +1272,7 @@ class _UrlCardState extends ConsumerState<_UrlCard> {
               url.url,
               style: TextStyle(
                 fontSize: 11.sp,
-                color: AppTheme.neonCyan.withOpacity(0.6),
+                color: AppTheme.neonCyan.withOpacity(0.7),
                 fontWeight: FontWeight.w500,
               ),
               maxLines: 1,
@@ -1207,7 +1284,7 @@ class _UrlCardState extends ConsumerState<_UrlCard> {
                 url.description,
                 style: TextStyle(
                   fontSize: 12.sp,
-                  color: Colors.white24,
+                  color: Colors.white38,
                   height: 1.2,
                 ),
                 maxLines: 1,
@@ -1239,20 +1316,20 @@ class _UrlCardState extends ConsumerState<_UrlCard> {
     final initial = url.name.isNotEmpty ? url.name[0].toUpperCase() : '?';
 
     return Container(
-      width: 34.w,
-      height: 34.w,
+      width: 36.w,
+      height: 36.w,
       decoration: BoxDecoration(
         color: Colors.black,
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(10),
         border: Border.all(color: Colors.white10),
       ),
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(10),
         child: faviconUrl.isNotEmpty
             ? Image.network(
                 faviconUrl,
-                width: 34.w,
-                height: 34.w,
+                width: 36.w,
+                height: 36.w,
                 fit: BoxFit.cover,
                 errorBuilder: (context, error, stackTrace) =>
                     _buildInitialFallback(initial),
@@ -1291,7 +1368,7 @@ class _UrlCardState extends ConsumerState<_UrlCard> {
             }
           },
           child: Icon(
-            url.isFavorite ? Icons.star : Icons.star_border,
+            url.isFavorite ? Icons.star_rounded : Icons.star_border_rounded,
             color: url.isFavorite ? Colors.amber : Colors.white24,
             size: 18,
           ),
@@ -1309,7 +1386,7 @@ class _UrlCardState extends ConsumerState<_UrlCard> {
           child: AnimatedSwitcher(
             duration: const Duration(milliseconds: 200),
             child: Icon(
-              _isCopied ? Icons.check_circle : Icons.copy,
+              _isCopied ? Icons.check_circle_rounded : Icons.copy_rounded,
               key: ValueKey(_isCopied),
               color: _isCopied ? const Color(0xFF00FF88) : Colors.white24,
               size: 16,
@@ -1325,7 +1402,7 @@ class _UrlCardState extends ConsumerState<_UrlCard> {
   Widget _buildEditDeleteMenu(BuildContext context, WidgetRef ref) {
     final url = widget.url;
     return PopupMenuButton<String>(
-      icon: const Icon(Icons.more_horiz, color: Colors.white24, size: 18),
+      icon: const Icon(Icons.more_horiz_rounded, color: Colors.white24, size: 18),
       padding: EdgeInsets.zero,
       constraints: const BoxConstraints(),
       color: AppTheme.surface,
@@ -1409,8 +1486,8 @@ class _UrlCardState extends ConsumerState<_UrlCard> {
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: AppTheme.neonCyan.withOpacity(0.1),
-              blurRadius: 8,
+              color: AppTheme.neonCyan.withOpacity(0.18),
+              blurRadius: 10,
               offset: const Offset(0, 2),
             ),
           ],
@@ -1418,13 +1495,13 @@ class _UrlCardState extends ConsumerState<_UrlCard> {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.bolt, color: Colors.black, size: 12),
+            const Icon(Icons.bolt_rounded, color: Colors.black, size: 13),
             SizedBox(width: 4.w),
             Text(
               'Launch',
               style: TextStyle(
                 fontSize: 12.sp,
-                fontWeight: FontWeight.bold,
+                fontWeight: FontWeight.w800,
                 color: Colors.black,
               ),
             ),
@@ -1479,6 +1556,12 @@ class _GridUrlCardState extends ConsumerState<_GridUrlCard> {
       padding: EdgeInsets.all(12.w),
       borderRadius: 16,
       opacity: 0.08,
+      borderGradient: LinearGradient(
+        colors: [
+          catColor.withOpacity(0.35),
+          Colors.white.withOpacity(0.04),
+        ],
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -1514,7 +1597,7 @@ class _GridUrlCardState extends ConsumerState<_GridUrlCard> {
                       await ref.read(firestoreServiceProvider).updateUrl(updated);
                     },
                     child: Icon(
-                      url.isFavorite ? Icons.star : Icons.star_border,
+                      url.isFavorite ? Icons.star_rounded : Icons.star_border_rounded,
                       color: url.isFavorite ? Colors.amber : Colors.white24,
                       size: 16,
                     ),
@@ -1523,7 +1606,7 @@ class _GridUrlCardState extends ConsumerState<_GridUrlCard> {
                   GestureDetector(
                     onTap: () => _copyToClipboard(url.url),
                     child: Icon(
-                      _isCopied ? Icons.check_circle : Icons.copy,
+                      _isCopied ? Icons.check_circle_rounded : Icons.copy_rounded,
                       color: _isCopied ? const Color(0xFF00FF88) : Colors.white24,
                       size: 14,
                     ),
@@ -1570,7 +1653,7 @@ class _GridUrlCardState extends ConsumerState<_GridUrlCard> {
             },
             child: Container(
               width: double.infinity,
-              padding: EdgeInsets.symmetric(vertical: 4.h),
+              padding: EdgeInsets.symmetric(vertical: 5.h),
               decoration: BoxDecoration(
                 gradient: const LinearGradient(
                   colors: [Color(0xFF4FACFE), Color(0xFF00F2FF)],
@@ -1581,7 +1664,7 @@ class _GridUrlCardState extends ConsumerState<_GridUrlCard> {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Icon(Icons.bolt, color: Colors.black, size: 10),
+                    const Icon(Icons.bolt_rounded, color: Colors.black, size: 11),
                     SizedBox(width: 2.w),
                     Text(
                       'Launch',

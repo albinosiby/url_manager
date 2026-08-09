@@ -2,12 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../models/url_model.dart';
 import '../services/providers.dart';
 import '../services/toast_service.dart';
 import '../services/encryption_service.dart';
 import '../services/password_generator_service.dart';
-import '../widgets/glass_card.dart';
 import '../widgets/neon_text_field.dart';
 import '../core/app_theme.dart';
 
@@ -83,195 +83,316 @@ class _PasswordFormScreenState extends ConsumerState<PasswordFormScreen> {
   Widget build(BuildContext context) {
     final strength = PasswordGeneratorService.calculateStrength(_passController.text);
 
-    return Padding(
-      padding: EdgeInsets.only(
-        bottom: MediaQuery.of(context).viewInsets.bottom,
-      ),
-      child: GlassCard(
-        borderRadius: 32,
-        padding: EdgeInsets.all(24.w),
-        opacity: 0.18,
-        blur: 25,
-        child: SingleChildScrollView(
-          child: Form(
-            key: _formKey,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Center(
-                  child: Container(
-                    width: 40.w,
-                    height: 4.h,
-                    decoration: BoxDecoration(
-                      color: Colors.white12,
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                  ),
-                ),
-                SizedBox(height: 24.h),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
+    return SafeArea(
+      child: Padding(
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.of(context).viewInsets.bottom,
+        ),
+        child: Container(
+          margin: EdgeInsets.symmetric(horizontal: 8.w, vertical: 8.h),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(32),
+            color: AppTheme.surface,
+            border: Border.all(
+              color: AppTheme.titaniumSlate.withOpacity(0.4),
+              width: 1.2,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.5),
+                blurRadius: 30,
+                offset: const Offset(0, -5),
+              ),
+            ],
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(32),
+            child: SingleChildScrollView(
+              padding: EdgeInsets.all(22.w),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    Icon(Icons.shield_outlined, color: AppTheme.neonCyan, size: 24.sp),
-                    SizedBox(width: 8.w),
-                    Text(
-                      widget.url == null ? 'New Password Entry' : 'Update Password Entry',
-                      style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                        fontSize: 20.sp,
-                        color: AppTheme.neonCyan,
+                    // Metallic Drag Handle Bar
+                    Center(
+                      child: Container(
+                        width: 42.w,
+                        height: 4.h,
+                        decoration: BoxDecoration(
+                          color: AppTheme.titaniumSilver.withOpacity(0.3),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
                       ),
                     ),
-                  ],
-                ),
-                SizedBox(height: 28.h),
-                NeonTextField(
-                  controller: _nameController,
-                  label: 'Service / Website Name',
-                  icon: Icons.label_outline,
-                  validator: (v) =>
-                      (v == null || v.trim().isEmpty) ? 'Required' : null,
-                ),
-                SizedBox(height: 16.h),
-                NeonTextField(
-                  controller: _urlController,
-                  label: 'Website URL (Optional)',
-                  icon: Icons.public_outlined,
-                ),
-                SizedBox(height: 16.h),
-                NeonTextField(
-                  controller: _userController,
-                  label: 'Username / Email',
-                  icon: Icons.person_outline,
-                  validator: (v) =>
-                      (v == null || v.trim().isEmpty) ? 'Required' : null,
-                ),
-                SizedBox(height: 16.h),
-                TextFormField(
-                  controller: _passController,
-                  obscureText: _obscurePassword,
-                  style: const TextStyle(color: Colors.white),
-                  validator: (v) =>
-                      (v == null || v.trim().isEmpty) ? 'Password is required' : null,
-                  decoration: InputDecoration(
-                    labelText: 'Password',
-                    labelStyle: const TextStyle(color: Colors.white38),
-                    prefixIcon: const Icon(
-                      Icons.lock_outline,
-                      color: AppTheme.neonCyan,
-                      size: 22,
-                    ),
-                    suffixIcon: Row(
-                      mainAxisSize: MainAxisSize.min,
+                    SizedBox(height: 18.h),
+
+                    // Top Header Bar
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        IconButton(
-                          icon: Icon(
-                            _obscurePassword ? Icons.visibility_off : Icons.visibility,
-                            color: Colors.white38,
-                            size: 18,
+                        Expanded(
+                          child: Row(
+                            children: [
+                              Container(
+                                padding: EdgeInsets.all(10.w),
+                                decoration: BoxDecoration(
+                                  color: AppTheme.surfaceLight,
+                                  borderRadius: BorderRadius.circular(14),
+                                  border: Border.all(
+                                    color: AppTheme.titaniumSlate.withOpacity(0.3),
+                                  ),
+                                ),
+                                child: Icon(
+                                  Icons.shield_rounded,
+                                  color: AppTheme.titaniumSilver,
+                                  size: 22.sp,
+                                ),
+                              ),
+                              SizedBox(width: 12.w),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      widget.url == null ? 'New Password Entry' : 'Update Password',
+                                      style: GoogleFonts.outfit(
+                                        fontSize: 17.sp,
+                                        fontWeight: FontWeight.w800,
+                                        color: Colors.white,
+                                      ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                    Text(
+                                      'AES-256 Client-Side Encrypted',
+                                      style: TextStyle(
+                                        fontSize: 11.sp,
+                                        color: AppTheme.titaniumSlate,
+                                      ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
                           ),
-                          onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
                         ),
-                        IconButton(
-                          icon: const Icon(
-                            Icons.autorenew_rounded,
-                            color: AppTheme.neonCyan,
-                            size: 20,
+                        SizedBox(width: 8.w),
+                        GestureDetector(
+                          onTap: () => Navigator.pop(context),
+                          child: Container(
+                            padding: EdgeInsets.all(8.w),
+                            decoration: BoxDecoration(
+                              color: AppTheme.surfaceLight,
+                              shape: BoxShape.circle,
+                              border: Border.all(color: Colors.white10),
+                            ),
+                            child: const Icon(
+                              Icons.close_rounded,
+                              color: Colors.white70,
+                              size: 18,
+                            ),
                           ),
-                          tooltip: 'Generate Strong Password',
-                          onPressed: _generateRandomPassword,
                         ),
                       ],
                     ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(16),
-                      borderSide: BorderSide(color: Colors.white.withOpacity(0.05)),
+                    SizedBox(height: 24.h),
+
+                    // Service Name
+                    NeonTextField(
+                      controller: _nameController,
+                      label: 'Service / Website Name (e.g. GitHub)',
+                      icon: Icons.label_outline_rounded,
+                      validator: (v) =>
+                          (v == null || v.trim().isEmpty) ? 'Name is required' : null,
                     ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(16),
-                      borderSide: const BorderSide(color: AppTheme.neonCyan, width: 2),
+                    SizedBox(height: 16.h),
+
+                    // Website URL
+                    NeonTextField(
+                      controller: _urlController,
+                      label: 'Website URL (Optional)',
+                      icon: Icons.public_rounded,
                     ),
-                  ),
-                ),
-                if (_passController.text.isNotEmpty) ...[
-                  SizedBox(height: 10.h),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(4),
-                          child: LinearProgressIndicator(
-                            value: strength.score,
-                            color: strength.color,
-                            backgroundColor: Colors.white10,
-                            minHeight: 4.h,
-                          ),
+                    SizedBox(height: 16.h),
+
+                    // Username Field
+                    NeonTextField(
+                      controller: _userController,
+                      label: 'Username / Email',
+                      icon: Icons.person_outline_rounded,
+                      validator: (v) =>
+                          (v == null || v.trim().isEmpty) ? 'Username is required' : null,
+                    ),
+                    SizedBox(height: 16.h),
+
+                    // Password Field with Generator & Strength Meter
+                    TextFormField(
+                      controller: _passController,
+                      obscureText: _obscurePassword,
+                      style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w500),
+                      validator: (v) =>
+                          (v == null || v.trim().isEmpty) ? 'Password is required' : null,
+                      decoration: InputDecoration(
+                        labelText: 'Password',
+                        labelStyle: TextStyle(color: Colors.white.withOpacity(0.4), fontSize: 13),
+                        prefixIcon: const Icon(
+                          Icons.lock_outline_rounded,
+                          color: AppTheme.titaniumSilver,
+                          size: 20,
+                        ),
+                        suffixIcon: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            IconButton(
+                              icon: Icon(
+                                _obscurePassword ? Icons.visibility_off_rounded : Icons.visibility_rounded,
+                                color: Colors.white38,
+                                size: 18,
+                              ),
+                              onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+                            ),
+                            IconButton(
+                              icon: const Icon(
+                                Icons.autorenew_rounded,
+                                color: AppTheme.titaniumSilver,
+                                size: 20,
+                              ),
+                              tooltip: 'Generate Strong Password',
+                              onPressed: _generateRandomPassword,
+                            ),
+                          ],
+                        ),
+                        filled: true,
+                        fillColor: AppTheme.surfaceLight,
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(16),
+                          borderSide: BorderSide(color: Colors.white.withOpacity(0.08)),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(16),
+                          borderSide: const BorderSide(color: AppTheme.titaniumSilver, width: 2),
+                        ),
+                        errorBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(16),
+                          borderSide: const BorderSide(color: Colors.redAccent, width: 1.2),
                         ),
                       ),
-                      SizedBox(width: 12.w),
-                      Text(
-                        strength.label,
-                        style: TextStyle(
-                          color: strength.color,
-                          fontSize: 11.sp,
-                          fontWeight: FontWeight.bold,
-                        ),
+                    ),
+
+                    // Strength Progress Meter
+                    if (_passController.text.isNotEmpty) ...[
+                      SizedBox(height: 10.h),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(4),
+                              child: LinearProgressIndicator(
+                                value: strength.score,
+                                color: strength.color,
+                                backgroundColor: Colors.white10,
+                                minHeight: 4.h,
+                              ),
+                            ),
+                          ),
+                          SizedBox(width: 12.w),
+                          Text(
+                            strength.label,
+                            style: TextStyle(
+                              color: strength.color,
+                              fontSize: 11.sp,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
                       ),
                     ],
-                  ),
-                ],
-                SizedBox(height: 16.h),
-                Text(
-                  'Category',
-                  style: TextStyle(
-                    color: Colors.white70,
-                    fontSize: 13.sp,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                SizedBox(height: 10.h),
-                SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: Row(
-                    children: _categories.map((cat) {
-                      final isSelected = cat == _selectedCategory;
-                      final catColor = AppTheme.getCategoryColor(cat);
-                      return Padding(
-                        padding: EdgeInsets.only(right: 8.w),
-                        child: ChoiceChip(
-                          label: Text(cat),
-                          selected: isSelected,
-                          selectedColor: catColor.withOpacity(0.2),
-                          backgroundColor: Colors.white.withOpacity(0.05),
-                          side: BorderSide(
-                            color: isSelected ? catColor : Colors.white10,
+                    SizedBox(height: 20.h),
+
+                    // Category Selector
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'Category Tag',
+                          style: TextStyle(
+                            color: Colors.white70,
+                            fontSize: 13.sp,
+                            fontWeight: FontWeight.w600,
                           ),
-                          labelStyle: TextStyle(
-                            color: isSelected ? catColor : Colors.white60,
-                            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                            fontSize: 12.sp,
-                          ),
-                          onSelected: (selected) {
-                            if (selected) {
-                              setState(() => _selectedCategory = cat);
-                            }
-                          },
                         ),
-                      );
-                    }).toList(),
-                  ),
+                        Text(
+                          _selectedCategory,
+                          style: TextStyle(
+                            color: AppTheme.getCategoryColor(_selectedCategory),
+                            fontSize: 12.sp,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: 10.h),
+                    SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: Row(
+                        children: _categories.map((cat) {
+                          final isSelected = cat == _selectedCategory;
+                          final catColor = AppTheme.getCategoryColor(cat);
+                          final catIcon = AppTheme.getCategoryIcon(cat);
+
+                          return Padding(
+                            padding: EdgeInsets.only(right: 8.w),
+                            child: ChoiceChip(
+                              avatar: Icon(
+                                catIcon,
+                                size: 14.sp,
+                                color: isSelected ? catColor : Colors.white54,
+                              ),
+                              label: Text(cat),
+                              selected: isSelected,
+                              selectedColor: catColor.withOpacity(0.2),
+                              backgroundColor: Colors.white.withOpacity(0.04),
+                              side: BorderSide(
+                                color: isSelected ? catColor : Colors.white10,
+                                width: isSelected ? 1.4 : 1,
+                              ),
+                              labelStyle: TextStyle(
+                                color: isSelected ? catColor : Colors.white60,
+                                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                                fontSize: 12.sp,
+                              ),
+                              onSelected: (selected) {
+                                if (selected) {
+                                  HapticFeedback.selectionClick();
+                                  setState(() => _selectedCategory = cat);
+                                }
+                              },
+                            ),
+                          );
+                        }).toList(),
+                      ),
+                    ),
+                    SizedBox(height: 20.h),
+
+                    // Recovery Notes
+                    NeonTextField(
+                      controller: _descController,
+                      label: 'Notes / Recovery Info (Optional)',
+                      icon: Icons.notes_rounded,
+                      maxLines: 2,
+                    ),
+                    SizedBox(height: 30.h),
+
+                    // Save Action Button
+                    _buildGlowButton(),
+                    SizedBox(height: 10.h),
+                  ],
                 ),
-                SizedBox(height: 16.h),
-                NeonTextField(
-                  controller: _descController,
-                  label: 'Notes / Recovery Info (Optional)',
-                  icon: Icons.notes_outlined,
-                  maxLines: 2,
-                ),
-                SizedBox(height: 32.h),
-                _buildGlowButton(),
-                SizedBox(height: 20.h),
-              ],
+              ),
             ),
           ),
         ),
@@ -283,17 +404,17 @@ class _PasswordFormScreenState extends ConsumerState<PasswordFormScreen> {
     return GestureDetector(
       onTap: _isSaving ? null : _savePassword,
       child: Container(
-        height: 56.h,
+        height: 52.h,
         decoration: BoxDecoration(
           gradient: const LinearGradient(
-            colors: [Color(0xFF4FACFE), Color(0xFF00F2FF)],
+            colors: [Color(0xFFE2E8F0), Color(0xFFCBD5E1)],
           ),
-          borderRadius: BorderRadius.circular(30),
+          borderRadius: BorderRadius.circular(26),
           boxShadow: [
             BoxShadow(
-              color: AppTheme.neonCyan.withOpacity(0.3),
-              blurRadius: 15,
-              offset: const Offset(0, 5),
+              color: AppTheme.titaniumSilver.withOpacity(0.3),
+              blurRadius: 16,
+              offset: const Offset(0, 4),
             ),
           ],
         ),
@@ -308,11 +429,12 @@ class _PasswordFormScreenState extends ConsumerState<PasswordFormScreen> {
                   ),
                 )
               : Text(
-                  widget.url == null ? 'Save Password Entry' : 'Apply Changes',
+                  widget.url == null ? 'Save Encrypted Password' : 'Apply Changes',
                   style: TextStyle(
-                    fontSize: 16.sp,
-                    fontWeight: FontWeight.bold,
+                    fontSize: 15.sp,
+                    fontWeight: FontWeight.w800,
                     color: Colors.black,
+                    letterSpacing: 0.5,
                   ),
                 ),
         ),
