@@ -6,6 +6,8 @@ class UrlModel {
   final String url;
   final String description;
   final DateTime createdAt;
+  final bool isFavorite;
+  final String category;
 
   UrlModel({
     this.id,
@@ -13,6 +15,8 @@ class UrlModel {
     required this.url,
     required this.description,
     required this.createdAt,
+    this.isFavorite = false,
+    this.category = 'General',
   });
 
   Map<String, dynamic> toMap() {
@@ -21,6 +25,8 @@ class UrlModel {
       'url': url,
       'description': description,
       'createdAt': Timestamp.fromDate(createdAt),
+      'isFavorite': isFavorite,
+      'category': category,
     };
   }
 
@@ -31,6 +37,8 @@ class UrlModel {
       url: map['url'] ?? '',
       description: map['description'] ?? '',
       createdAt: (map['createdAt'] as Timestamp? ?? Timestamp.now()).toDate(),
+      isFavorite: map['isFavorite'] ?? false,
+      category: map['category'] ?? 'General',
     );
   }
 
@@ -40,6 +48,8 @@ class UrlModel {
     String? url,
     String? description,
     DateTime? createdAt,
+    bool? isFavorite,
+    String? category,
   }) {
     return UrlModel(
       id: id ?? this.id,
@@ -47,6 +57,8 @@ class UrlModel {
       url: url ?? this.url,
       description: description ?? this.description,
       createdAt: createdAt ?? this.createdAt,
+      isFavorite: isFavorite ?? this.isFavorite,
+      category: category ?? this.category,
     );
   }
 }

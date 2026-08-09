@@ -56,4 +56,21 @@ class AppTheme {
       elevation: 10,
     ),
   );
+
+  static Color getCategoryColor(String category) {
+    switch (category) {
+      case 'Dev':
+        return const Color(0xFF00FF88); // Neon Green
+      case 'Work':
+        return const Color(0xFF00A3FF); // Electric Blue
+      case 'Finance':
+        return const Color(0xFFFFB800); // Gold
+      case 'Social':
+        return const Color(0xFFFF007A); // Pink Glow
+      case 'Personal':
+        return const Color(0xFFA050FF); // Purple
+      default:
+        return neonCyan;
+    }
+  }
 }

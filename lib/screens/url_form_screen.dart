@@ -23,7 +23,17 @@ class _UrlFormScreenState extends ConsumerState<UrlFormScreen> {
   late TextEditingController _nameController;
   late TextEditingController _urlController;
   late TextEditingController _descController;
+  late String _selectedCategory;
   bool _isSaving = false;
+
+  static const List<String> _categories = [
+    'General',
+    'Work',
+    'Dev',
+    'Personal',
+    'Finance',
+    'Social',
+  ];
 
   @override
   void initState() {
@@ -33,6 +43,7 @@ class _UrlFormScreenState extends ConsumerState<UrlFormScreen> {
     _descController = TextEditingController(
       text: widget.url?.description ?? '',
     );
+    _selectedCategory = widget.url?.category ?? 'General';
   }
 
   @override
@@ -101,6 +112,49 @@ class _UrlFormScreenState extends ConsumerState<UrlFormScreen> {
                   },
                 ),
                 SizedBox(height: 20.h),
+                Text(
+                  'Category',
+                  style: TextStyle(
+                    color: Colors.white70,
+                    fontSize: 13.sp,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                SizedBox(height: 10.h),
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: _categories.map((cat) {
+                      final isSelected = cat == _selectedCategory;
+                      final catColor = AppTheme.getCategoryColor(cat);
+                      return Padding(
+                        padding: EdgeInsets.only(right: 8.w),
+                        child: ChoiceChip(
+                          label: Text(cat),
+                          selected: isSelected,
+                          selectedColor: catColor.withOpacity(0.2),
+                          backgroundColor: Colors.white.withOpacity(0.05),
+                          side: BorderSide(
+                            color: isSelected
+                                ? catColor
+                                : Colors.white10,
+                          ),
+                          labelStyle: TextStyle(
+                            color: isSelected ? catColor : Colors.white60,
+                            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                            fontSize: 12.sp,
+                          ),
+                          onSelected: (selected) {
+                            if (selected) {
+                              setState(() => _selectedCategory = cat);
+                            }
+                          },
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                ),
+                SizedBox(height: 20.h),
                 NeonTextField(
                   controller: _descController,
                   label: 'Notes (Optional)',
@@ -130,7 +184,7 @@ class _UrlFormScreenState extends ConsumerState<UrlFormScreen> {
           borderRadius: BorderRadius.circular(30),
           boxShadow: [
             BoxShadow(
-              color: AppTheme.neonCyan.withValues(alpha: 0.3),
+              color: AppTheme.neonCyan.withOpacity(0.3),
               blurRadius: 15,
               offset: const Offset(0, 5),
             ),
@@ -173,6 +227,8 @@ class _UrlFormScreenState extends ConsumerState<UrlFormScreen> {
         url: _urlController.text.trim(),
         description: _descController.text.trim(),
         createdAt: widget.url?.createdAt ?? DateTime.now(),
+        isFavorite: widget.url?.isFavorite ?? false,
+        category: _selectedCategory,
       );
 
       if (widget.url == null) {
