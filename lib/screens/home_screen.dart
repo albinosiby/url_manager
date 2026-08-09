@@ -10,9 +10,12 @@ import '../models/url_model.dart';
 import '../services/providers.dart';
 import '../services/toast_service.dart';
 import '../services/biometric_service.dart';
+import '../services/encryption_service.dart';
+import '../services/password_generator_service.dart';
 import '../widgets/glass_card.dart';
 import '../core/app_theme.dart';
 import 'url_form_screen.dart';
+import 'password_form_screen.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -23,6 +26,7 @@ class HomeScreen extends ConsumerStatefulWidget {
 
 class _HomeScreenState extends ConsumerState<HomeScreen> {
   final TextEditingController _searchController = TextEditingController();
+  int _selectedTab = 0; // 0 = URL Vault, 1 = Password Vault
   String _searchQuery = '';
   String _selectedCategory = 'All';
   bool _isGridView = false;
@@ -53,8 +57,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         setState(() => _isVaultLocked = false);
         if (mounted) ToastService.show(context, 'Vault Unlocked');
       } else {
-        if (mounted)
-          ToastService.show(context, 'Authentication Failed', isError: true);
+        if (mounted) ToastService.show(context, 'Authentication Failed', isError: true);
       }
     } else {
       setState(() => _isVaultLocked = true);
@@ -102,21 +105,46 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           Column(
             children: [
               _buildTopHeader(),
-              _buildCategoryChips(),
+              _buildSectionTabBar(),
+              if (_selectedTab == 0) _buildCategoryChips(),
+              SizedBox(height: 6.h),
               Expanded(
                 child: urlsAsync.when(
                   data: (urls) {
+                    if (_selectedTab == 1) {
+                      // Password Vault Tab (items with credentials)
+                      final passUrls = urls.where((u) => u.hasCredentials).where((u) {
+                        return u.name.toLowerCase().contains(_searchQuery.toLowerCase()) ||
+                            u.url.toLowerCase().contains(_searchQuery.toLowerCase()) ||
+                            (u.username != null &&
+                                u.username!.toLowerCase().contains(_searchQuery.toLowerCase()));
+                      }).toList();
+
+                      if (passUrls.isEmpty) {
+                        return _buildEmptyPasswordState(urls.isNotEmpty);
+                      }
+
+                      return ListView.builder(
+                        padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 10.h),
+                        itemCount: passUrls.length,
+                        itemBuilder: (context, index) {
+                          final url = passUrls[index];
+                          return _buildDismissiblePasswordCard(url, index);
+                        },
+                      );
+                    }
+
+                    // URL Vault Tab (Bookmarks)
                     final filteredUrls = urls.where((u) {
-                      final matchesSearch =
-                          u.name.toLowerCase().contains(
-                            _searchQuery.toLowerCase(),
-                          ) ||
+                      final matchesSearch = u.name.toLowerCase().contains(
+                                _searchQuery.toLowerCase(),
+                              ) ||
                           u.url.toLowerCase().contains(
-                            _searchQuery.toLowerCase(),
-                          ) ||
+                                _searchQuery.toLowerCase(),
+                              ) ||
                           u.description.toLowerCase().contains(
-                            _searchQuery.toLowerCase(),
-                          );
+                                _searchQuery.toLowerCase(),
+                              );
 
                       if (!matchesSearch) return false;
 
@@ -147,11 +175,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         itemCount: filteredUrls.length,
                         itemBuilder: (context, index) {
                           final url = filteredUrls[index];
-                          return _buildDismissibleCard(
-                            url,
-                            index,
-                            isGrid: true,
-                          );
+                          return _buildDismissibleCard(url, index, isGrid: true);
                         },
                       );
                     }
@@ -216,7 +240,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         ],
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () => _showUrlForm(context),
+        onPressed: () {
+          if (_selectedTab == 0) {
+            _showUrlForm(context);
+          } else {
+            _showPasswordForm(context);
+          }
+        },
         backgroundColor: Colors.transparent,
         elevation: 0,
         child: Container(
@@ -233,50 +263,170 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               ),
             ],
           ),
-          child: const Icon(Icons.add, color: Colors.black, size: 28),
+          child: Icon(
+            _selectedTab == 0 ? Icons.add : Icons.add_moderator,
+            color: Colors.black,
+            size: 28,
+          ),
         ),
       ).animate().scale(delay: 600.ms, curve: Curves.elasticOut),
     );
   }
 
-  Widget _buildDismissibleCard(
-    UrlModel url,
-    int index, {
-    required bool isGrid,
-  }) {
+  Widget _buildSectionTabBar() {
+    return Container(
+      margin: EdgeInsets.symmetric(horizontal: 20.w, vertical: 8.h),
+      padding: EdgeInsets.all(4.w),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.04),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.white10),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: GestureDetector(
+              onTap: () => setState(() => _selectedTab = 0),
+              child: Container(
+                padding: EdgeInsets.symmetric(vertical: 8.h),
+                decoration: BoxDecoration(
+                  color: _selectedTab == 0 ? AppTheme.neonCyan.withOpacity(0.15) : Colors.transparent,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: _selectedTab == 0 ? AppTheme.neonCyan.withOpacity(0.5) : Colors.transparent,
+                  ),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.link_rounded,
+                      size: 16.sp,
+                      color: _selectedTab == 0 ? AppTheme.neonCyan : Colors.white54,
+                    ),
+                    SizedBox(width: 6.w),
+                    Text(
+                      'URL Vault',
+                      style: TextStyle(
+                        fontSize: 13.sp,
+                        fontWeight: FontWeight.bold,
+                        color: _selectedTab == 0 ? AppTheme.neonCyan : Colors.white54,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          Expanded(
+            child: GestureDetector(
+              onTap: () => setState(() => _selectedTab = 1),
+              child: Container(
+                padding: EdgeInsets.symmetric(vertical: 8.h),
+                decoration: BoxDecoration(
+                  color: _selectedTab == 1 ? AppTheme.neonCyan.withOpacity(0.15) : Colors.transparent,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: _selectedTab == 1 ? AppTheme.neonCyan.withOpacity(0.5) : Colors.transparent,
+                  ),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.shield_outlined,
+                      size: 16.sp,
+                      color: _selectedTab == 1 ? AppTheme.neonCyan : Colors.white54,
+                    ),
+                    SizedBox(width: 6.w),
+                    Text(
+                      'Passwords',
+                      style: TextStyle(
+                        fontSize: 13.sp,
+                        fontWeight: FontWeight.bold,
+                        color: _selectedTab == 1 ? AppTheme.neonCyan : Colors.white54,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDismissibleCard(UrlModel url, int index, {required bool isGrid}) {
     return Dismissible(
-          key: Key(url.id ?? url.url + index.toString()),
-          background: Container(
-            alignment: Alignment.centerLeft,
-            padding: EdgeInsets.only(left: 20.w),
-            decoration: BoxDecoration(
-              color: AppTheme.neonCyan.withOpacity(0.2),
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: const Icon(Icons.share, color: AppTheme.neonCyan),
-          ),
-          secondaryBackground: Container(
-            alignment: Alignment.centerRight,
-            padding: EdgeInsets.only(right: 20.w),
-            decoration: BoxDecoration(
-              color: Colors.redAccent.withOpacity(0.2),
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: const Icon(Icons.delete_outline, color: Colors.redAccent),
-          ),
-          confirmDismiss: (direction) async {
-            if (direction == DismissDirection.startToEnd) {
-              Share.share('${url.name}: ${url.url}');
-              return false;
-            } else {
-              return await _confirmDelete(context, ref, url);
-            }
-          },
-          child: isGrid ? _GridUrlCard(url: url) : _UrlCard(url: url),
-        )
-        .animate(delay: (index * 40).ms)
-        .fadeIn(duration: 350.ms)
-        .scale(begin: const Offset(0.96, 0.96), curve: Curves.easeOut);
+      key: Key(url.id ?? url.url + index.toString()),
+      background: Container(
+        alignment: Alignment.centerLeft,
+        padding: EdgeInsets.only(left: 20.w),
+        decoration: BoxDecoration(
+          color: AppTheme.neonCyan.withOpacity(0.2),
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: const Icon(Icons.share, color: AppTheme.neonCyan),
+      ),
+      secondaryBackground: Container(
+        alignment: Alignment.centerRight,
+        padding: EdgeInsets.only(right: 20.w),
+        decoration: BoxDecoration(
+          color: Colors.redAccent.withOpacity(0.2),
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: const Icon(Icons.delete_outline, color: Colors.redAccent),
+      ),
+      confirmDismiss: (direction) async {
+        if (direction == DismissDirection.startToEnd) {
+          Share.share('${url.name}: ${url.url}');
+          return false;
+        } else {
+          return await _confirmDelete(context, ref, url);
+        }
+      },
+      child: isGrid ? _GridUrlCard(url: url) : _UrlCard(url: url),
+    ).animate(delay: (index * 40).ms).fadeIn(duration: 350.ms).scale(
+          begin: const Offset(0.96, 0.96),
+          curve: Curves.easeOut,
+        );
+  }
+
+  Widget _buildDismissiblePasswordCard(UrlModel url, int index) {
+    return Dismissible(
+      key: Key('pass_${url.id ?? index.toString()}'),
+      background: Container(
+        alignment: Alignment.centerLeft,
+        padding: EdgeInsets.only(left: 20.w),
+        decoration: BoxDecoration(
+          color: AppTheme.neonCyan.withOpacity(0.2),
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: const Icon(Icons.share, color: AppTheme.neonCyan),
+      ),
+      secondaryBackground: Container(
+        alignment: Alignment.centerRight,
+        padding: EdgeInsets.only(right: 20.w),
+        decoration: BoxDecoration(
+          color: Colors.redAccent.withOpacity(0.2),
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: const Icon(Icons.delete_outline, color: Colors.redAccent),
+      ),
+      confirmDismiss: (direction) async {
+        if (direction == DismissDirection.startToEnd) {
+          Share.share('${url.name}: ${url.url}');
+          return false;
+        } else {
+          return await _confirmDelete(context, ref, url);
+        }
+      },
+      child: _PasswordCard(url: url),
+    ).animate(delay: (index * 40).ms).fadeIn(duration: 350.ms).scale(
+          begin: const Offset(0.96, 0.96),
+          curve: Curves.easeOut,
+        );
   }
 
   Widget _buildLockedVaultScreen() {
@@ -299,9 +449,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   decoration: BoxDecoration(
                     color: AppTheme.neonCyan.withOpacity(0.1),
                     shape: BoxShape.circle,
-                    border: Border.all(
-                      color: AppTheme.neonCyan.withOpacity(0.3),
-                    ),
+                    border: Border.all(color: AppTheme.neonCyan.withOpacity(0.3)),
                   ),
                   child: Icon(
                     Icons.lock_outline_rounded,
@@ -327,10 +475,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 GestureDetector(
                   onTap: _toggleVaultLock,
                   child: Container(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: 32.w,
-                      vertical: 14.h,
-                    ),
+                    padding: EdgeInsets.symmetric(horizontal: 32.w, vertical: 14.h),
                     decoration: BoxDecoration(
                       gradient: const LinearGradient(
                         colors: [Color(0xFF4FACFE), Color(0xFF00F2FF)],
@@ -371,7 +516,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   Widget _buildTopHeader() {
     return Container(
-      margin: EdgeInsets.only(top: 50.h, left: 20.w, right: 20.w, bottom: 10.h),
+      margin: EdgeInsets.only(top: 50.h, left: 20.w, right: 20.w, bottom: 6.h),
       child: Column(
         children: [
           Row(
@@ -399,19 +544,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               ),
               Row(
                 children: [
-                  IconButton(
-                    icon: Icon(
-                      _isGridView
-                          ? Icons.view_list_rounded
-                          : Icons.grid_view_rounded,
-                      color: Colors.white70,
-                      size: 20.sp,
+                  if (_selectedTab == 0)
+                    IconButton(
+                      icon: Icon(
+                        _isGridView ? Icons.view_list_rounded : Icons.grid_view_rounded,
+                        color: Colors.white70,
+                        size: 20.sp,
+                      ),
+                      onPressed: () => setState(() => _isGridView = !_isGridView),
+                      tooltip: _isGridView ? 'Switch to List View' : 'Switch to Grid View',
                     ),
-                    onPressed: () => setState(() => _isGridView = !_isGridView),
-                    tooltip: _isGridView
-                        ? 'Switch to List View'
-                        : 'Switch to Grid View',
-                  ),
                   IconButton(
                     icon: Icon(
                       _isVaultLocked ? Icons.lock : Icons.lock_open,
@@ -425,7 +567,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               ),
             ],
           ),
-          SizedBox(height: 16.h),
+          SizedBox(height: 12.h),
           Container(
             padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 4.h),
             decoration: BoxDecoration(
@@ -467,7 +609,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       fontWeight: FontWeight.w500,
                     ),
                     decoration: InputDecoration(
-                      hintText: 'Search links, domain, notes...',
+                      hintText: _selectedTab == 0 ? 'Search links, domain, notes...' : 'Search logins, username, website...',
                       hintStyle: TextStyle(
                         color: Colors.white30,
                         fontSize: 13.sp,
@@ -510,7 +652,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   Widget _buildCategoryChips() {
     return SizedBox(
-      height: 40.h,
+      height: 38.h,
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
         padding: EdgeInsets.symmetric(horizontal: 20.w),
@@ -536,7 +678,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               selected: isSelected,
               selectedColor: catColor.withOpacity(0.2),
               backgroundColor: Colors.white.withOpacity(0.04),
-              side: BorderSide(color: isSelected ? catColor : Colors.white10),
+              side: BorderSide(
+                color: isSelected ? catColor : Colors.white10,
+              ),
               labelStyle: TextStyle(
                 color: isSelected ? catColor : Colors.white60,
                 fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
@@ -562,20 +706,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(
-              hasUrlsInVault
-                  ? Icons.search_off_rounded
-                  : Icons.link_off_rounded,
+              hasUrlsInVault ? Icons.search_off_rounded : Icons.link_off_rounded,
               size: 50.sp,
               color: Colors.white10,
             ),
             SizedBox(height: 12.h),
             Text(
-              hasUrlsInVault ? 'No matching links found' : 'Vault is empty',
-              style: TextStyle(
-                color: Colors.white38,
-                fontSize: 16.sp,
-                fontWeight: FontWeight.w600,
-              ),
+              hasUrlsInVault
+                  ? 'No matching links found'
+                  : 'Vault is empty',
+              style: TextStyle(color: Colors.white38, fontSize: 16.sp, fontWeight: FontWeight.w600),
             ),
             SizedBox(height: 6.h),
             Text(
@@ -596,10 +736,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   });
                 },
                 child: Container(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: 16.w,
-                    vertical: 8.h,
-                  ),
+                  padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
                   decoration: BoxDecoration(
                     color: Colors.white.withOpacity(0.08),
                     borderRadius: BorderRadius.circular(20),
@@ -622,6 +759,37 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 
+  Widget _buildEmptyPasswordState(bool hasPasswords) {
+    return Center(
+      child: Padding(
+        padding: EdgeInsets.symmetric(horizontal: 30.w),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              hasPasswords ? Icons.search_off_rounded : Icons.shield_outlined,
+              size: 54.sp,
+              color: Colors.white10,
+            ),
+            SizedBox(height: 12.h),
+            Text(
+              hasPasswords ? 'No matching passwords' : 'Password Vault is Empty',
+              style: TextStyle(color: Colors.white38, fontSize: 16.sp, fontWeight: FontWeight.w600),
+            ),
+            SizedBox(height: 6.h),
+            Text(
+              hasPasswords
+                  ? 'Try searching for another keyword'
+                  : 'Tap the + button to add your first encrypted login',
+              textAlign: TextAlign.center,
+              style: TextStyle(color: Colors.white24, fontSize: 12.sp),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   void _showUrlForm(BuildContext context, [UrlModel? url]) {
     HapticFeedback.lightImpact();
     showModalBottomSheet(
@@ -632,16 +800,22 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 
-  Future<bool> _confirmDelete(
-    BuildContext context,
-    WidgetRef ref,
-    UrlModel url,
-  ) async {
+  void _showPasswordForm(BuildContext context, [UrlModel? url]) {
+    HapticFeedback.lightImpact();
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => PasswordFormScreen(url: url),
+    );
+  }
+
+  Future<bool> _confirmDelete(BuildContext context, WidgetRef ref, UrlModel url) async {
     final result = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: AppTheme.surface,
-        title: const Text('Delete Connection?'),
+        title: const Text('Delete Entry?'),
         content: Text('Are you sure you want to delete "${url.name}"?'),
         actions: [
           TextButton(
@@ -662,6 +836,259 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       ),
     );
     return result ?? false;
+  }
+}
+
+class _PasswordCard extends ConsumerStatefulWidget {
+  final UrlModel url;
+
+  const _PasswordCard({required this.url});
+
+  @override
+  ConsumerState<_PasswordCard> createState() => _PasswordCardState();
+}
+
+class _PasswordCardState extends ConsumerState<_PasswordCard> {
+  bool _obscurePassword = true;
+
+  @override
+  Widget build(BuildContext context) {
+    final url = widget.url;
+    final host = Uri.tryParse(url.url)?.host ?? '';
+    final faviconUrl = host.isNotEmpty
+        ? 'https://www.google.com/s2/favicons?domain=$host&sz=64'
+        : '';
+    final initial = url.name.isNotEmpty ? url.name[0].toUpperCase() : '?';
+
+    final decryptedPass = (url.password != null && url.password!.isNotEmpty)
+        ? EncryptionService.decrypt(url.password!)
+        : '';
+    final strength = PasswordGeneratorService.calculateStrength(decryptedPass);
+
+    return Padding(
+      padding: EdgeInsets.only(bottom: 10.h),
+      child: GlassCard(
+        padding: EdgeInsets.all(16.w),
+        borderRadius: 20,
+        opacity: 0.1,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      width: 36.w,
+                      height: 36.w,
+                      decoration: BoxDecoration(
+                        color: Colors.black,
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(color: Colors.white10),
+                      ),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(10),
+                        child: faviconUrl.isNotEmpty
+                            ? Image.network(
+                                faviconUrl,
+                                fit: BoxFit.cover,
+                                errorBuilder: (context, error, stackTrace) =>
+                                    Center(child: Text(initial, style: TextStyle(color: AppTheme.neonCyan, fontWeight: FontWeight.bold))),
+                              )
+                            : Center(child: Text(initial, style: TextStyle(color: AppTheme.neonCyan, fontWeight: FontWeight.bold))),
+                      ),
+                    ),
+                    SizedBox(width: 12.w),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          url.name,
+                          style: GoogleFonts.outfit(
+                            fontSize: 16.sp,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                        if (host.isNotEmpty)
+                          Text(
+                            host,
+                            style: TextStyle(fontSize: 11.sp, color: Colors.white38),
+                          ),
+                      ],
+                    ),
+                  ],
+                ),
+                Container(
+                  padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 3.h),
+                  decoration: BoxDecoration(
+                    color: strength.color.withOpacity(0.15),
+                    borderRadius: BorderRadius.circular(6),
+                    border: Border.all(color: strength.color.withOpacity(0.4), width: 0.8),
+                  ),
+                  child: Text(
+                    strength.label,
+                    style: TextStyle(
+                      color: strength.color,
+                      fontSize: 10.sp,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            SizedBox(height: 14.h),
+
+            // Username Box
+            if (url.username != null && url.username!.isNotEmpty) ...[
+              Container(
+                padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
+                decoration: BoxDecoration(
+                  color: Colors.black.withOpacity(0.3),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.white.withOpacity(0.05)),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Row(
+                      children: [
+                        const Icon(Icons.person_outline, color: Colors.white38, size: 14),
+                        SizedBox(width: 8.w),
+                        Text(
+                          url.username!,
+                          style: TextStyle(color: Colors.white70, fontSize: 13.sp),
+                        ),
+                      ],
+                    ),
+                    GestureDetector(
+                      onTap: () {
+                        Clipboard.setData(ClipboardData(text: url.username!));
+                        HapticFeedback.lightImpact();
+                        ToastService.show(context, 'Username Copied');
+                      },
+                      child: const Icon(Icons.copy, color: AppTheme.neonCyan, size: 14),
+                    ),
+                  ],
+                ),
+              ),
+              SizedBox(height: 8.h),
+            ],
+
+            // Password Box
+            if (decryptedPass.isNotEmpty) ...[
+              Container(
+                padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
+                decoration: BoxDecoration(
+                  color: Colors.black.withOpacity(0.3),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.white.withOpacity(0.05)),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Row(
+                      children: [
+                        const Icon(Icons.lock_outline, color: AppTheme.neonCyan, size: 14),
+                        SizedBox(width: 8.w),
+                        Text(
+                          _obscurePassword ? '••••••••••••••••' : decryptedPass,
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 13.sp,
+                            fontFamily: _obscurePassword ? null : 'monospace',
+                          ),
+                        ),
+                      ],
+                    ),
+                    Row(
+                      children: [
+                        GestureDetector(
+                          onTap: () => setState(() => _obscurePassword = !_obscurePassword),
+                          child: Icon(
+                            _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                            color: Colors.white38,
+                            size: 16,
+                          ),
+                        ),
+                        SizedBox(width: 12.w),
+                        GestureDetector(
+                          onTap: () {
+                            Clipboard.setData(ClipboardData(text: decryptedPass));
+                            HapticFeedback.lightImpact();
+                            ToastService.show(context, 'Password Copied');
+                          },
+                          child: const Icon(Icons.key, color: AppTheme.neonCyan, size: 14),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ],
+
+            SizedBox(height: 12.h),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                GestureDetector(
+                  onTap: () {
+                    showModalBottomSheet(
+                      context: context,
+                      isScrollControlled: true,
+                      backgroundColor: Colors.transparent,
+                      builder: (context) => PasswordFormScreen(url: url),
+                    );
+                  },
+                  child: Row(
+                    children: [
+                      const Icon(Icons.edit_outlined, color: Colors.white38, size: 12),
+                      SizedBox(width: 4.w),
+                      Text('Edit', style: TextStyle(color: Colors.white38, fontSize: 11.sp)),
+                    ],
+                  ),
+                ),
+                if (url.url.isNotEmpty && url.url.startsWith('http'))
+                  GestureDetector(
+                    onTap: () async {
+                      try {
+                        final uri = Uri.parse(url.url.trim());
+                        if (await canLaunchUrl(uri)) {
+                          await launchUrl(uri, mode: LaunchMode.externalApplication);
+                        }
+                      } catch (_) {}
+                    },
+                    child: Container(
+                      padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
+                      decoration: BoxDecoration(
+                        color: AppTheme.neonCyan.withOpacity(0.12),
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(color: AppTheme.neonCyan.withOpacity(0.3)),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.open_in_new, color: AppTheme.neonCyan, size: 10),
+                          SizedBox(width: 4.w),
+                          Text(
+                            'Open Site',
+                            style: TextStyle(
+                              fontSize: 10.sp,
+                              fontWeight: FontWeight.bold,
+                              color: AppTheme.neonCyan,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }
 
@@ -715,9 +1142,9 @@ class _UrlCardState extends ConsumerState<_UrlCard> {
                   child: Text(
                     url.name,
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontSize: 16.sp,
-                      color: Colors.white,
-                    ),
+                          fontSize: 16.sp,
+                          color: Colors.white,
+                        ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -725,17 +1152,11 @@ class _UrlCardState extends ConsumerState<_UrlCard> {
                 if (url.category.isNotEmpty && url.category != 'General') ...[
                   SizedBox(width: 6.w),
                   Container(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: 6.w,
-                      vertical: 2.h,
-                    ),
+                    padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
                     decoration: BoxDecoration(
                       color: catColor.withOpacity(0.15),
                       borderRadius: BorderRadius.circular(6),
-                      border: Border.all(
-                        color: catColor.withOpacity(0.3),
-                        width: 0.8,
-                      ),
+                      border: Border.all(color: catColor.withOpacity(0.3), width: 0.8),
                     ),
                     child: Text(
                       url.category,
@@ -875,18 +1296,14 @@ class _UrlCardState extends ConsumerState<_UrlCard> {
             size: 18,
           ),
         ),
-        SizedBox(width: 12.w),
+        SizedBox(width: 10.w),
         GestureDetector(
           onTap: () {
             Share.share('${url.name}: ${url.url}');
           },
-          child: const Icon(
-            Icons.share_outlined,
-            color: Colors.white24,
-            size: 16,
-          ),
+          child: const Icon(Icons.share_outlined, color: Colors.white24, size: 16),
         ),
-        SizedBox(width: 12.w),
+        SizedBox(width: 10.w),
         GestureDetector(
           onTap: () => _copyToClipboard(url.url),
           child: AnimatedSwitcher(
@@ -894,7 +1311,7 @@ class _UrlCardState extends ConsumerState<_UrlCard> {
             child: Icon(
               _isCopied ? Icons.check_circle : Icons.copy,
               key: ValueKey(_isCopied),
-              color: _isCopied ? Color(0xFF00FF88) : Colors.white24,
+              color: _isCopied ? const Color(0xFF00FF88) : Colors.white24,
               size: 16,
             ),
           ),
@@ -1083,25 +1500,10 @@ class _GridUrlCardState extends ConsumerState<_GridUrlCard> {
                       ? Image.network(
                           faviconUrl,
                           fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) => Center(
-                            child: Text(
-                              initial,
-                              style: TextStyle(
-                                color: AppTheme.neonCyan,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
+                          errorBuilder: (context, error, stackTrace) =>
+                              Center(child: Text(initial, style: TextStyle(color: AppTheme.neonCyan, fontWeight: FontWeight.bold))),
                         )
-                      : Center(
-                          child: Text(
-                            initial,
-                            style: TextStyle(
-                              color: AppTheme.neonCyan,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
+                      : Center(child: Text(initial, style: TextStyle(color: AppTheme.neonCyan, fontWeight: FontWeight.bold))),
                 ),
               ),
               Row(
@@ -1109,9 +1511,7 @@ class _GridUrlCardState extends ConsumerState<_GridUrlCard> {
                   GestureDetector(
                     onTap: () async {
                       final updated = url.copyWith(isFavorite: !url.isFavorite);
-                      await ref
-                          .read(firestoreServiceProvider)
-                          .updateUrl(updated);
+                      await ref.read(firestoreServiceProvider).updateUrl(updated);
                     },
                     child: Icon(
                       url.isFavorite ? Icons.star : Icons.star_border,
@@ -1124,9 +1524,7 @@ class _GridUrlCardState extends ConsumerState<_GridUrlCard> {
                     onTap: () => _copyToClipboard(url.url),
                     child: Icon(
                       _isCopied ? Icons.check_circle : Icons.copy,
-                      color: _isCopied
-                          ? const Color(0xFF00FF88)
-                          : Colors.white24,
+                      color: _isCopied ? const Color(0xFF00FF88) : Colors.white24,
                       size: 14,
                     ),
                   ),

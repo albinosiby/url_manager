@@ -8,6 +8,8 @@ class UrlModel {
   final DateTime createdAt;
   final bool isFavorite;
   final String category;
+  final String? username;
+  final String? password;
 
   UrlModel({
     this.id,
@@ -17,7 +19,13 @@ class UrlModel {
     required this.createdAt,
     this.isFavorite = false,
     this.category = 'General',
+    this.username,
+    this.password,
   });
+
+  bool get hasCredentials =>
+      (username != null && username!.isNotEmpty) ||
+      (password != null && password!.isNotEmpty);
 
   Map<String, dynamic> toMap() {
     return {
@@ -27,6 +35,8 @@ class UrlModel {
       'createdAt': Timestamp.fromDate(createdAt),
       'isFavorite': isFavorite,
       'category': category,
+      'username': username,
+      'password': password,
     };
   }
 
@@ -39,6 +49,8 @@ class UrlModel {
       createdAt: (map['createdAt'] as Timestamp? ?? Timestamp.now()).toDate(),
       isFavorite: map['isFavorite'] ?? false,
       category: map['category'] ?? 'General',
+      username: map['username'],
+      password: map['password'],
     );
   }
 
@@ -50,6 +62,8 @@ class UrlModel {
     DateTime? createdAt,
     bool? isFavorite,
     String? category,
+    String? username,
+    String? password,
   }) {
     return UrlModel(
       id: id ?? this.id,
@@ -59,6 +73,8 @@ class UrlModel {
       createdAt: createdAt ?? this.createdAt,
       isFavorite: isFavorite ?? this.isFavorite,
       category: category ?? this.category,
+      username: username ?? this.username,
+      password: password ?? this.password,
     );
   }
 }

@@ -84,7 +84,7 @@ class _UrlFormScreenState extends ConsumerState<UrlFormScreen> {
                 ),
                 SizedBox(height: 32.h),
                 Text(
-                  widget.url == null ? 'New Connection' : 'Update Link',
+                  widget.url == null ? 'New Bookmark Connection' : 'Update Connection',
                   style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                     fontSize: 22.sp,
                     color: AppTheme.neonCyan,
@@ -135,9 +135,7 @@ class _UrlFormScreenState extends ConsumerState<UrlFormScreen> {
                           selectedColor: catColor.withOpacity(0.2),
                           backgroundColor: Colors.white.withOpacity(0.05),
                           side: BorderSide(
-                            color: isSelected
-                                ? catColor
-                                : Colors.white10,
+                            color: isSelected ? catColor : Colors.white10,
                           ),
                           labelStyle: TextStyle(
                             color: isSelected ? catColor : Colors.white60,
@@ -229,6 +227,8 @@ class _UrlFormScreenState extends ConsumerState<UrlFormScreen> {
         createdAt: widget.url?.createdAt ?? DateTime.now(),
         isFavorite: widget.url?.isFavorite ?? false,
         category: _selectedCategory,
+        username: widget.url?.username,
+        password: widget.url?.password,
       );
 
       if (widget.url == null) {
