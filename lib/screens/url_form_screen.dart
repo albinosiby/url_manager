@@ -86,7 +86,7 @@ class _UrlFormScreenState extends ConsumerState<UrlFormScreen> {
                   label: 'Name',
                   icon: Icons.label_outline,
                   validator: (v) =>
-                      (v == null || v.isEmpty) ? 'Required' : null,
+                      (v == null || v.trim().isEmpty) ? 'Required' : null,
                 ),
                 SizedBox(height: 20.h),
                 NeonTextField(
@@ -94,8 +94,9 @@ class _UrlFormScreenState extends ConsumerState<UrlFormScreen> {
                   label: 'URL',
                   icon: Icons.public_outlined,
                   validator: (v) {
-                    if (v == null || v.isEmpty) return 'Required';
-                    if (!v.startsWith('http')) return 'Invalid URL';
+                    if (v == null || v.trim().isEmpty) return 'Required';
+                    final trimmed = v.trim();
+                    if (!trimmed.startsWith('http')) return 'Invalid URL';
                     return null;
                   },
                 ),
@@ -129,7 +130,7 @@ class _UrlFormScreenState extends ConsumerState<UrlFormScreen> {
           borderRadius: BorderRadius.circular(30),
           boxShadow: [
             BoxShadow(
-              color: AppTheme.neonCyan.withOpacity(0.3),
+              color: AppTheme.neonCyan.withValues(alpha: 0.3),
               blurRadius: 15,
               offset: const Offset(0, 5),
             ),

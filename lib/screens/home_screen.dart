@@ -67,12 +67,44 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               loading: () => const Center(
                 child: CircularProgressIndicator(color: AppTheme.neonCyan),
               ),
-              error: (err, _) => Center(
-                child: Text(
-                  'Error: $err',
-                  style: const TextStyle(color: Colors.redAccent),
-                ),
-              ),
+              error: (err, _) {
+                String message = 'Failed to load URLs';
+                final errStr = err.toString();
+                if (errStr.contains('no-app') ||
+                    errStr.contains('core/no-app') ||
+                    errStr.contains('FirebaseApp')) {
+                  message =
+                      'Firebase Configuration Missing\n\nPlease add google-services.json (Android) or GoogleService-Info.plist (iOS) to set up connection.';
+                } else {
+                  message = 'Error: $err';
+                }
+
+                return Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 40.w),
+                  child: Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.cloud_off_rounded,
+                          size: 48.sp,
+                          color: Colors.redAccent.withValues(alpha: 0.7),
+                        ),
+                        SizedBox(height: 16.h),
+                        Text(
+                          message,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: Colors.white70,
+                            fontSize: 14.sp,
+                            height: 1.4,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
             ),
           ),
         ],
@@ -89,7 +121,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             borderRadius: BorderRadius.circular(16),
             boxShadow: [
               BoxShadow(
-                color: AppTheme.neonCyan.withOpacity(0.4),
+                color: AppTheme.neonCyan.withValues(alpha: 0.4),
                 blurRadius: 20,
                 offset: const Offset(0, 4),
               ),
@@ -231,7 +263,7 @@ class _UrlCard extends ConsumerWidget {
                       vertical: 1.h,
                     ),
                     decoration: BoxDecoration(
-                      color: AppTheme.neonPurple.withOpacity(0.15),
+                      color: AppTheme.neonPurple.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(4),
                     ),
                     child: Text(
@@ -250,7 +282,7 @@ class _UrlCard extends ConsumerWidget {
               url.url,
               style: TextStyle(
                 fontSize: 11.sp,
-                color: AppTheme.neonCyan.withOpacity(0.6),
+                color: AppTheme.neonCyan.withValues(alpha: 0.6),
                 fontWeight: FontWeight.w500,
               ),
               maxLines: 1,
@@ -356,9 +388,25 @@ class _UrlCard extends ConsumerWidget {
   Widget _buildLaunchButton(BuildContext context) {
     return GestureDetector(
       onTap: () async {
-        final uri = Uri.parse(url.url);
-        if (await canLaunchUrl(uri)) {
-          await launchUrl(uri, mode: LaunchMode.externalApplication);
+        final urlString = url.url.trim();
+        if (urlString.isEmpty) {
+          ToastService.show(context, 'URL is empty', isError: true);
+          return;
+        }
+
+        try {
+          final uri = Uri.parse(urlString);
+          if (await canLaunchUrl(uri)) {
+            await launchUrl(uri, mode: LaunchMode.externalApplication);
+          } else {
+            if (context.mounted) {
+              ToastService.show(context, 'Could not launch URL', isError: true);
+            }
+          }
+        } catch (e) {
+          if (context.mounted) {
+            ToastService.show(context, 'Invalid URL format', isError: true);
+          }
         }
       },
       child: Container(
@@ -370,7 +418,7 @@ class _UrlCard extends ConsumerWidget {
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: AppTheme.neonCyan.withOpacity(0.1),
+              color: AppTheme.neonCyan.withValues(alpha: 0.1),
               blurRadius: 8,
               offset: const Offset(0, 2),
             ),

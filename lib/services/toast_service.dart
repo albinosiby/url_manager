@@ -16,12 +16,14 @@ class ToastService {
             color: Color(0xFF1A1A2E),
             borderRadius: BorderRadius.circular(30),
             border: Border.all(
-              color: isError ? Colors.redAccent.withOpacity(0.5) : AppTheme.neonCyan.withOpacity(0.3),
+              color: isError
+                  ? Colors.redAccent.withValues(alpha: 0.5)
+                  : AppTheme.neonCyan.withValues(alpha: 0.3),
               width: 1,
             ),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.4),
+                color: Colors.black.withValues(alpha: 0.4),
                 blurRadius: 15,
                 offset: const Offset(0, 5),
               ),
